@@ -2,7 +2,7 @@
 
 This is a proof-of-concept. And so far it's not even a great proof.
 
-The goal is to stream the sound from a local PC in a simple and straightforward manner. Not intended to scale - one owner, one stream at a time is good enough.
+The goal is to stream the sound from local PC sound devices in a simple and straightforward manner. Not intended to scale - one owner, one stream at a time is good enough.
 
 ## Dependencies
 
