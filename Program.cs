@@ -1,4 +1,4 @@
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
@@ -61,6 +61,7 @@ namespace SoundOnlyBot
             commands.RegisterCommands<LoopbackCommands>();
             commands.RegisterCommands<WasapiCommands>();
             commands.RegisterCommands<WaveInCommands>();
+            commands.RegisterCommands<FfmpegCommands>();
 
             commands.CommandExecuted += OnCommandExecutedAsync;
             commands.CommandErrored += OnCommandErroredAsync;
