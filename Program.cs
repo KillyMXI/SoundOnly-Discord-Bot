@@ -61,6 +61,8 @@ namespace SoundOnlyBot
             commands.RegisterCommands<LoopbackCommands>();
             commands.RegisterCommands<WasapiCommands>();
             commands.RegisterCommands<WaveInCommands>();
+            commands.RegisterCommands<CscoreCommands>();
+            commands.RegisterCommands<CscoreWaveInCommands>();
 
             commands.CommandExecuted += OnCommandExecutedAsync;
             commands.CommandErrored += OnCommandErroredAsync;
