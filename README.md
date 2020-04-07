@@ -18,6 +18,7 @@ After the first run with no config file, the app will create a dummy config (`bo
 - `wavein` - uses [WaveInEvent](https://github.com/naudio/NAudio/blob/master/NAudio/Wave/WaveInputs/WaveInEvent.cs) to get audio from capture devices (microphones and such);
 - `wasapi` - uses [WasapiCapture](https://github.com/naudio/NAudio/blob/master/NAudio/Wave/WaveInputs/WasapiCapture.cs) to get audio from capture devices (microphones and such);
 - `loopback` - uses [WasapiLoopbackCapture](https://github.com/naudio/NAudio/blob/master/NAudio/Wave/WaveInputs/WasapiLoopbackCapture.cs) to get audio from "render" devices (speakers and such);
+- `ffmpeg` - uses ffmpeg process to get audio from capture devices (put `ffmpeg.exe` near the bot binary);
 - `leave` - stop any active stream and leave voice channel.
 
 All activating commands have an optional argument. Instead if seeing the device list and replying with a number every time, the number can be provided as an argument.
@@ -40,7 +41,11 @@ NAudio is a poorly documented mess. [CSCore](https://github.com/filoe/cscore) se
 
 - ASIO support from NAudio left unimplemented. It requires [single-threaded apartment state](https://docs.microsoft.com/en-us/dotnet/api/system.threading.thread.setapartmentstate). Not worth an effort unless the above issue is sorted out first. Also can't just slap `[STAThread]` on top of `Main()`;
 
-- It might be interesting idea to handle the return channel and allow to use this as a voice gateway. It might suffice for voice comms the way it is already. But it wasn't my goal, so I leave it for "maybe later".
+- It might be interesting idea to handle the return channel and allow to use this as a voice gateway. It might suffice for voice comms the way it is already. But it wasn't my goal, so I leave it for "maybe later";
+
+- CSCore can be used despite the lack of .NET Core support. It doesn't solve the sound issues though (`cscore` branch);
+
+- FFmpeg can be used to capture sound in a way similar to playing files. It produces somewhat better result than all other attempts so far, but still not perfect.
 
 ## License
 
