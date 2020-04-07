@@ -15,4 +15,10 @@
     <PackageReference Include="NAudio" Version="1.10.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="WinMM.Net">
+      <HintPath>..\dsharpplus_bot\WinMM.Net\WinMM.Net\bin\Release\WinMM.Net.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
