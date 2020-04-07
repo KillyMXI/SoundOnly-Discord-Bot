@@ -1,4 +1,4 @@
-﻿using DSharpPlus;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
@@ -6,6 +6,7 @@ using DSharpPlus.VoiceNext;
 using Microsoft.Extensions.DependencyInjection;
 using SoundOnlyBot.Commands;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace SoundOnlyBot
@@ -27,6 +28,8 @@ namespace SoundOnlyBot
                 config.Save();
                 return;
             }
+
+            Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
 
             var client = new DiscordClient(new DiscordConfiguration
             {
@@ -61,6 +64,16 @@ namespace SoundOnlyBot
 
             commands.CommandExecuted += OnCommandExecutedAsync;
             commands.CommandErrored += OnCommandErroredAsync;
+
+            AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs e) =>
+            {
+                client.DebugLogger.LogMessage(
+                    LogLevel.Error,
+                    AppDomain.CurrentDomain.FriendlyName,
+                    $"unhandled exception happened:\n------\n{e.ExceptionObject}\n------",
+                    DateTime.Now
+                    );
+            };
 
             await client.ConnectAsync();
             await Task.Delay(-1);

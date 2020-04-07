@@ -7,7 +7,6 @@ using NAudio.CoreAudioApi;
 using NAudio.Utils;
 using NAudio.Wave;
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -100,7 +99,7 @@ namespace SoundOnlyBot.Commands
             var bpsOut = _pcmProvider.WaveFormat.BitsPerSample;
 
             var voiceConnection = await memberVoiceChannel.ConnectAsync();
-            var transmitStream = Stream.Synchronized(voiceConnection.GetTransmitStream());
+            var transmitStream = voiceConnection.GetTransmitStream();
 
             _wasapiLoopbackCapture.DataAvailable
                 += (sender, e)

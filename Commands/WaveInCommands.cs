@@ -6,7 +6,6 @@ using DSharpPlus.VoiceNext;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -80,15 +79,9 @@ namespace SoundOnlyBot.Commands
             {
                 DeviceNumber = deviceIndex,
                 WaveFormat = new WaveFormat(48000, 16, 2),
-                BufferMilliseconds = 20
+                BufferMilliseconds = 250,
+                NumberOfBuffers = 4
             };
-
-            var voiceConnection = await memberVoiceChannel.ConnectAsync();
-            var transmitStream = Stream.Synchronized(voiceConnection.GetTransmitStream());
-
-            _waveInEvent.DataAvailable
-                += (sender, e)
-                => transmitStream.Write(e.Buffer, 0, e.BytesRecorded);
 
             _state.LeaveFunc = async () =>
             {
@@ -98,18 +91,24 @@ namespace SoundOnlyBot.Commands
                     _waveInEvent.Dispose();
                     _waveInEvent = null;
                 }
-
-                await Task.Delay(100);
-
-                var voiceConnection = ctx.Client.GetVoiceNext().GetConnection(ctx.Guild);
-                if (voiceConnection != null)
-                {
-                    voiceConnection.Disconnect();
-                }
+                await Task.Delay(50);
+                ctx.Client.GetVoiceNext().GetConnection(ctx.Guild)?.Disconnect();
             };
 
+            _waveInEvent.RecordingStopped
+                += (sender, e)
+                => _ = _state.LeaveAsync();
+
+            var voiceConnection = await memberVoiceChannel.ConnectAsync();
+            var transmitStream = voiceConnection.GetTransmitStream();
+            transmitStream.Write(new byte[96000], 0, 96000);
+
+            _waveInEvent.DataAvailable
+                += (sender, e)
+                => transmitStream.Write(e.Buffer, 0, e.BytesRecorded);
+
             _waveInEvent.StartRecording();
-            transmitStream.Write(new byte[192000], 0, 192000);
+            transmitStream.Write(new byte[96000], 0, 96000);
         }
     }
 }
