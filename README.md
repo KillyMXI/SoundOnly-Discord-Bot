@@ -43,9 +43,11 @@ NAudio is a poorly documented mess. [CSCore](https://github.com/filoe/cscore) se
 
 - It might be interesting idea to handle the return channel and allow to use this as a voice gateway. It might suffice for voice comms the way it is already. But it wasn't my goal, so I leave it for "maybe later";
 
-- CSCore can be used despite the lack of .NET Core support. It doesn't solve the sound issues though (`cscore` branch);
+- CSCore can be used despite the lack of .NET Core support. It doesn't solve the sound issues though (`cscore` branch of this repo);
 
-- FFmpeg can be used to capture sound in a way similar to playing files. It produces somewhat better result than all other attempts so far, but still not perfect.
+- FFmpeg can be used to capture sound in a way similar to playing files. It produces somewhat better result than all other attempts so far, but still not usable.
+
+- New `DSharpPlus.VoiceNext` implementation is fully async and it works against realtime applications.
 
 ## License
 

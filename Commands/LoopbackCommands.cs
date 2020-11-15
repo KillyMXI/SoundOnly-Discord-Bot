@@ -1,7 +1,7 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.VoiceNext;
 using NAudio.CoreAudioApi;
 using NAudio.Utils;
@@ -35,7 +35,7 @@ namespace SoundOnlyBot.Commands
             var memberVoiceChannel = ctx.Member?.VoiceState?.Channel;
             if (memberVoiceChannel == null)
             {
-                await ctx.RespondAsync("You need to be in a voice channel.");
+                _ = await ctx.RespondAsync("You need to be in a voice channel.");
                 return;
             }
 
@@ -62,17 +62,17 @@ namespace SoundOnlyBot.Commands
                     .WaitForMessageAsync(msg => msg.Author == ctx.User, TimeSpan.FromSeconds(60));
                 if (interactivityResult.TimedOut)
                 {
-                    await ctx.RespondAsync("No selection provided.");
+                    _ = await ctx.RespondAsync("No selection provided.");
                     return;
                 }
                 if (!int.TryParse(interactivityResult.Result.Content, out deviceIndex))
                 {
-                    await ctx.RespondAsync("Expected a number, got something else instead.");
+                    _ = await ctx.RespondAsync("Expected a number, got something else instead.");
                     return;
                 }
                 if (deviceIndex < 0 || deviceIndex >= endpoinds.Length)
                 {
-                    await ctx.RespondAsync("No device under this number.");
+                    _ = await ctx.RespondAsync("No device under this number.");
                     return;
                 }
             }
@@ -82,13 +82,13 @@ namespace SoundOnlyBot.Commands
 
             if (wf.SampleRate != 48000 || wf.Channels != 2)
             {
-                await ctx.RespondAsync($"Expected a stereo sound source with SampleRate 48000, got {wf.SampleRate}, {wf.Channels} channels instead.");
+                _ = await ctx.RespondAsync($"Expected a stereo sound source with SampleRate 48000, got {wf.SampleRate}, {wf.Channels} channels instead.");
                 return;
             }
 
             if (wf.Encoding != WaveFormatEncoding.IeeeFloat)
             {
-                await ctx.RespondAsync($"Expected a sound source with IeeeFloat encodedd values, got {wf.Encoding.ToString()} instead.");
+                _ = await ctx.RespondAsync($"Expected a sound source with IeeeFloat encodedd values, got {wf.Encoding.ToString()} instead.");
                 return;
             }
 
@@ -99,7 +99,7 @@ namespace SoundOnlyBot.Commands
             var bpsOut = _pcmProvider.WaveFormat.BitsPerSample;
 
             var voiceConnection = await memberVoiceChannel.ConnectAsync();
-            var transmitStream = voiceConnection.GetTransmitStream();
+            var transmitSink = voiceConnection.GetTransmitSink();
 
             _wasapiLoopbackCapture.DataAvailable
                 += (sender, e)
@@ -111,7 +111,7 @@ namespace SoundOnlyBot.Commands
                         var outBytesNumber = e.BytesRecorded * bpsOut / bpsIn;
                         _byteBuffer = BufferHelpers.Ensure(_byteBuffer, outBytesNumber);
                         var bytesRead = _pcmProvider.Read(_byteBuffer, 0, outBytesNumber);
-                        transmitStream.Write(_byteBuffer, 0, bytesRead);
+                        _ = transmitSink.WriteAsync(_byteBuffer, 0, bytesRead);
                     }
                 };
 
@@ -134,7 +134,7 @@ namespace SoundOnlyBot.Commands
             };
 
             _wasapiLoopbackCapture.StartRecording();
-            transmitStream.Write(new byte[192000], 0, 192000);
+            _ = transmitSink.WriteAsync(new byte[192000], 0, 192000);
         }
     }
 }

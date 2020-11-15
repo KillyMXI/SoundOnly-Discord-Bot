@@ -1,9 +1,9 @@
-﻿using DSharpPlus;
-using DSharpPlus.CommandsNext;
+﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.VoiceNext;
+using Microsoft.Extensions.Logging;
 using NAudio.CoreAudioApi;
 using System;
 using System.Diagnostics;
@@ -57,17 +57,17 @@ namespace SoundOnlyBot.Commands
                     .WaitForMessageAsync(msg => msg.Author == ctx.User, TimeSpan.FromSeconds(60));
                 if (interactivityResult.TimedOut)
                 {
-                    await ctx.RespondAsync("No selection provided.");
+                    _ = await ctx.RespondAsync("No selection provided.");
                     return;
                 }
                 if (!int.TryParse(interactivityResult.Result.Content, out deviceIndex))
                 {
-                    await ctx.RespondAsync("Expected a number, got something else instead.");
+                    _ = await ctx.RespondAsync("Expected a number, got something else instead.");
                     return;
                 }
                 if (deviceIndex < 0 || deviceIndex >= endpoinds.Length)
                 {
-                    await ctx.RespondAsync("No device under this number.");
+                    _ = await ctx.RespondAsync("No device under this number.");
                     return;
                 }
             }
@@ -83,15 +83,9 @@ namespace SoundOnlyBot.Commands
                 RedirectStandardError = true
             } };
 
-            ffmpegProcess.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
-            {
-                ctx.Client.DebugLogger.LogMessage(
-                    LogLevel.Info,
-                    "ffmpeg error output",
-                    $"{e.Data}",
-                    DateTime.Now
-                    );
-            };
+            ffmpegProcess.ErrorDataReceived
+                += (object sender, DataReceivedEventArgs e)
+                => Program.Log(ctx.Client, LogLevel.Information, $"FFmpeg error:\n{e.Data}");
 
             var cts = new CancellationTokenSource();
 
@@ -104,13 +98,13 @@ namespace SoundOnlyBot.Commands
                 ctx.Client.GetVoiceNext().GetConnection(ctx.Guild)?.Disconnect();
             };
 
-            ffmpegProcess.Start();
+            _ = ffmpegProcess.Start();
             ffmpegProcess.PriorityClass = ProcessPriorityClass.High;
             ffmpegProcess.BeginErrorReadLine();
 
             var voiceConnection = await memberVoiceChannel.ConnectAsync();
-            var transmitStream = voiceConnection.GetTransmitStream();
-            transmitStream.Write(new byte[96000], 0, 96000);
+            var transmitSink = voiceConnection.GetTransmitSink();
+            _ = transmitSink.WriteAsync(new byte[19200], 0, 19200);
 
             var ffoutStream = ffmpegProcess.StandardOutput.BaseStream;
 
@@ -123,10 +117,10 @@ namespace SoundOnlyBot.Commands
 
                 while (!token.IsCancellationRequested)
                 {
-                    ffoutStream.CopyTo(transmitStream, buffSize);
+                    _ = ffoutStream.CopyToAsync(transmitSink, buffSize);
                     var now = Stopwatch.GetTimestamp();
                     timestamp += ticksPerSample;
-                    var ticksToWait = timestamp - now - 1000; // arbitrary number from 0 to ticksPerSample
+                    var ticksToWait = timestamp - now - 50000; // arbitrary number from 0 to ticksPerSample
                     if (ticksToWait > 0)
                     {
                         await Task.Delay(TimeSpan.FromTicks(ticksToWait)).ConfigureAwait(false);

@@ -1,7 +1,7 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.VoiceNext;
 using NAudio.Wave;
 using System;
@@ -29,7 +29,7 @@ namespace SoundOnlyBot.Commands
             var memberVoiceChannel = ctx.Member?.VoiceState?.Channel;
             if (memberVoiceChannel == null)
             {
-                await ctx.RespondAsync("You need to be in a voice channel.");
+                _ = await ctx.RespondAsync("You need to be in a voice channel.");
                 return;
             }
 
@@ -60,17 +60,17 @@ namespace SoundOnlyBot.Commands
                     .WaitForMessageAsync(msg => msg.Author == ctx.User, TimeSpan.FromSeconds(60));
                 if (interactivityResult.TimedOut)
                 {
-                    await ctx.RespondAsync("No selection provided.");
+                    _ = await ctx.RespondAsync("No selection provided.");
                     return;
                 }
                 if (!int.TryParse(interactivityResult.Result.Content, out deviceIndex))
                 {
-                    await ctx.RespondAsync("Expected a number, got something else instead.");
+                    _ = await ctx.RespondAsync("Expected a number, got something else instead.");
                     return;
                 }
                 if (deviceIndex < 0 || deviceIndex >= capabilities.Count)
                 {
-                    await ctx.RespondAsync("No device under this number.");
+                    _ = await ctx.RespondAsync("No device under this number.");
                     return;
                 }
             }
@@ -100,15 +100,15 @@ namespace SoundOnlyBot.Commands
                 => _ = _state.LeaveAsync();
 
             var voiceConnection = await memberVoiceChannel.ConnectAsync();
-            var transmitStream = voiceConnection.GetTransmitStream();
-            transmitStream.Write(new byte[96000], 0, 96000);
+            var transmitSink = voiceConnection.GetTransmitSink();
+            _ = transmitSink.WriteAsync(new byte[96000], 0, 96000);
 
             _waveInEvent.DataAvailable
                 += (sender, e)
-                => transmitStream.Write(e.Buffer, 0, e.BytesRecorded);
+                => transmitSink.WriteAsync(e.Buffer, 0, e.BytesRecorded);
 
             _waveInEvent.StartRecording();
-            transmitStream.Write(new byte[96000], 0, 96000);
+            _ = transmitSink.WriteAsync(new byte[96000], 0, 96000);
         }
     }
 }
